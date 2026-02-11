@@ -14,6 +14,18 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
+
+// Body parsing middleware with detailed logging
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/candidate") && req.method === "POST") {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
+      "content-type": req.get("content-type"),
+      origin: req.get("origin"),
+    });
+  }
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 

@@ -32,6 +32,9 @@ export const config = {
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
 };
 
+// Log CORS configuration for debugging
+console.log("🔐 CORS Origins allowed:", config.corsOrigin);
+
 // Validation
 if (!config.geminiApiKey) {
   console.warn("⚠️  GEMINI_API_KEY not configured. AI features will not work.");

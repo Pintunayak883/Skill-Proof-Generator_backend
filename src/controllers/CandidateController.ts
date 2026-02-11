@@ -60,6 +60,9 @@ export class CandidateController {
   async uploadResume(req: Request, res: Response) {
     try {
       const { token } = req.params;
+      console.log("[uploadResume] Request body:", JSON.stringify(req.body, null, 2));
+      console.log("[uploadResume] Token:", token);
+      
       const testLink = await testLinkService.validateTestLink(token);
 
       // Expect: { sessionId, resumeUrl, fileKey, fileName, fileMimeType }
@@ -67,8 +70,14 @@ export class CandidateController {
         req.body;
 
       if (!sessionId || !resumeUrl || !fileKey) {
+        console.error("[uploadResume] Missing fields:", {
+          sessionId: !!sessionId,
+          resumeUrl: !!resumeUrl,
+          fileKey: !!fileKey,
+        });
         return res.status(400).json({
           error: "Missing required fields: sessionId, resumeUrl, fileKey",
+          received: { sessionId: !!sessionId, resumeUrl: !!resumeUrl, fileKey: !!fileKey },
         });
       }
 
@@ -126,8 +135,11 @@ export class CandidateController {
         analysis,
       });
     } catch (error) {
-      console.error("[uploadResume]", error);
-      res.status(500).json({ error: "Resume upload failed" });
+      console.error("[uploadResume] Error:", error instanceof Error ? error.message : String(error));
+      if (error instanceof Error && error.message.includes("Unsupported file type")) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Resume upload failed", details: error instanceof Error ? error.message : undefined });
     }
   }
 
