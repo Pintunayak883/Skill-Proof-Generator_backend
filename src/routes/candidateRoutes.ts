@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { candidateController } from "../controllers/CandidateController";
-import { uploadResume } from "../middleware/upload";
 import { asyncHandler } from "../middleware/errorHandler";
 
 const router = Router();
@@ -10,11 +9,14 @@ router.post(
   "/:token/personal-info",
   asyncHandler((req, res) => candidateController.submitPersonalInfo(req, res)),
 );
+
+// Resume upload now uses UploadThing
+// Frontend uploads to UploadThing, then sends the file URL and metadata to this endpoint
 router.post(
   "/:token/resume",
-  uploadResume.single("resume"),
   asyncHandler((req, res) => candidateController.uploadResume(req, res)),
 );
+
 router.post(
   "/:token/manual-input",
   asyncHandler((req, res) => candidateController.submitManualInput(req, res)),

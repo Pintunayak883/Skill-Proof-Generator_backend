@@ -39,7 +39,11 @@ export const generateTestLinkSchema = z.object({
 export const candidatePersonalInfoSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/),
+  phone: z
+    .string()
+    .regex(/^[+\d\s\-()]+$/)
+    .min(10)
+    .max(20),
 });
 
 // Manual Skill Input Validators

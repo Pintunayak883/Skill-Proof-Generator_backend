@@ -4,7 +4,8 @@ export interface IResume extends Document {
   candidateId: mongoose.Types.ObjectId;
   fileName: string;
   fileType: "pdf" | "docx";
-  filePath: string;
+  resumeUrl: string; // UploadThing URL
+  fileKey: string; // UploadThing file key for deletion
   rawText: string;
   uploadedAt: Date;
 }
@@ -18,7 +19,8 @@ const resumeSchema = new Schema<IResume>(
     },
     fileName: { type: String, required: true },
     fileType: { type: String, enum: ["pdf", "docx"], required: true },
-    filePath: { type: String, required: true },
+    resumeUrl: { type: String, required: true }, // UploadThing file URL
+    fileKey: { type: String, required: true }, // UploadThing file key for deletion
     rawText: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now },
   },

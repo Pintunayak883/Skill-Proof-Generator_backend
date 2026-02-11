@@ -15,7 +15,7 @@ import {
   sessionIdSchema,
 } from "../validators";
 import { SkillLevel } from "../types";
-import { extractTextFromFile, getFileTypeFromMime } from "../utils/fileParser";
+import { extractTextFromUrl, getFileTypeFromMime } from "../utils/fileParser";
 
 export class CandidateController {
   // Step 1: Personal details
@@ -56,21 +56,26 @@ export class CandidateController {
     }
   }
 
-  // Step 2A: Resume upload and analysis
+  // Step 2A: Resume upload and analysis (UploadThing)
   async uploadResume(req: Request, res: Response) {
     try {
       const { token } = req.params;
       const testLink = await testLinkService.validateTestLink(token);
 
-      const { sessionId } = sessionIdSchema.parse(req.body);
+      // Expect: { sessionId, resumeUrl, fileKey, fileName, fileMimeType }
+      const { sessionId, resumeUrl, fileKey, fileName, fileMimeType } =
+        req.body;
+
+      if (!sessionId || !resumeUrl || !fileKey) {
+        return res.status(400).json({
+          error: "Missing required fields: sessionId, resumeUrl, fileKey",
+        });
+      }
+
       const candidate =
         await candidateService.getCandidateBySessionId(sessionId);
       if (!candidate) {
         return res.status(404).json({ error: "Candidate not found" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ error: "Resume file required" });
       }
 
       const jobPosition = await jobPositionService.getJobPositionById(
@@ -80,15 +85,19 @@ export class CandidateController {
         return res.status(404).json({ error: "Job position not found" });
       }
 
-      const fileType = getFileTypeFromMime(req.file.mimetype);
-      const rawText = await extractTextFromFile(req.file.path, fileType);
+      // Determine file type from MIME type (provided by frontend)
+      const fileType = fileMimeType ? getFileTypeFromMime(fileMimeType) : "pdf";
 
-      // Store resume
+      // Download and extract text from UploadThing URL
+      const rawText = await extractTextFromUrl(resumeUrl, fileType);
+
+      // Store resume with UploadThing URL
       const resume = await resumeService.storeResume(
         candidate._id,
-        req.file.originalname,
+        fileName || "resume.pdf",
         fileType,
-        req.file.path,
+        resumeUrl,
+        fileKey,
         rawText,
       );
 

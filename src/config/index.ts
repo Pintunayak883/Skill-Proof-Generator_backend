@@ -11,6 +11,11 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || "your-super-secret-key",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
+
+  // UploadThing configuration (replaces local file uploads)
+  uploadThingSecret: process.env.UPLOADTHING_SECRET || "",
+  uploadThingAppId: process.env.UPLOADTHING_APP_ID || "",
+
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE || "5242880", 10),
   allowedFileTypes: (process.env.ALLOWED_FILE_TYPES || "pdf,docx").split(","),
   maxTestAttempts: parseInt(process.env.MAX_TEST_ATTEMPTS || "1", 10),
@@ -30,4 +35,10 @@ export const config = {
 // Validation
 if (!config.geminiApiKey) {
   console.warn("⚠️  GEMINI_API_KEY not configured. AI features will not work.");
+}
+
+if (!config.uploadThingSecret || !config.uploadThingAppId) {
+  console.warn(
+    "⚠️  UPLOADTHING_SECRET or UPLOADTHING_APP_ID not configured. Resume uploads will not work.",
+  );
 }

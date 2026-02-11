@@ -3,20 +3,27 @@ import { ResumeAnalysis, IResumeAnalysis } from "../models/ResumeAnalysis";
 import { createError } from "../utils/errors";
 import { ResumeAnalysisOutput } from "../types";
 import { ObjectId } from "mongoose";
+import { deleteUploadedFile } from "../lib/uploadthing";
 
 export class ResumeService {
+  /**
+   * Store resume with UploadThing URL
+   * No longer accepts filePath - uses resumeUrl from UploadThing instead
+   */
   async storeResume(
     candidateId: string | ObjectId,
     fileName: string,
     fileType: "pdf" | "docx",
-    filePath: string,
+    resumeUrl: string,
+    fileKey: string,
     rawText: string,
   ): Promise<IResume> {
     const resume = await Resume.create({
       candidateId,
       fileName,
       fileType,
-      filePath,
+      resumeUrl,
+      fileKey,
       rawText,
     });
 
@@ -27,6 +34,21 @@ export class ResumeService {
     candidateId: string | ObjectId,
   ): Promise<IResume | null> {
     return Resume.findOne({ candidateId });
+  }
+
+  async deleteResume(resumeId: string | ObjectId): Promise<void> {
+    const resume = await Resume.findById(resumeId);
+    if (!resume) {
+      throw createError(404, "Resume not found");
+    }
+
+    // Delete from UploadThing
+    if (resume.fileKey) {
+      await deleteUploadedFile(resume.fileKey);
+    }
+
+    // Delete from MongoDB
+    await Resume.deleteOne({ _id: resumeId });
   }
 
   async storeResumeAnalysis(

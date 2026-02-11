@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { createRouteHandler } from "uploadthing/express";
 import { config } from "./config";
 import { connectDatabase } from "./config/database";
+import { uploadRouter } from "./lib/uploadthing";
 import routes from "./routes";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -25,6 +27,14 @@ app.use(limiter);
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// UploadThing route handler (handles file uploads)
+app.use(
+  "/api/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+  }),
+);
 
 // Routes
 app.use("/api", routes);
