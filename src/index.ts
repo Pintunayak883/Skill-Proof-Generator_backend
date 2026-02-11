@@ -29,6 +29,14 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Log parsed body for candidate endpoints
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/candidate") && req.method === "POST") {
+    console.log(`[${new Date().toISOString()}] BODY:`, JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
