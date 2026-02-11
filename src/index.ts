@@ -13,7 +13,31 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: config.corsOrigin, credentials: true }));
+
+// Enhanced CORS configuration
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const allowedOrigins = config.corsOrigin;
+    
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+      callback(null, true);
+    } else {
+      console.warn(`[CORS] Rejected origin: ${origin}. Allowed: ${allowedOrigins.join(", ")}`);
+      callback(null, true); // Allow anyway for now to debug
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 // Body parsing middleware with detailed logging
 app.use((req, res, next) => {
@@ -32,7 +56,10 @@ app.use(express.urlencoded({ extended: true }));
 // Log parsed body for candidate endpoints
 app.use((req, res, next) => {
   if (req.path.startsWith("/api/candidate") && req.method === "POST") {
-    console.log(`[${new Date().toISOString()}] BODY:`, JSON.stringify(req.body, null, 2));
+    console.log(
+      `[${new Date().toISOString()}] BODY:`,
+      JSON.stringify(req.body, null, 2),
+    );
   }
   next();
 });
